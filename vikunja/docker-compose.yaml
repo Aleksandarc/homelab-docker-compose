@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  vikunja:
+    image: vikunja/vikunja
+    environment:
+      VIKUNJA_DATABASE_HOST: db
+      VIKUNJA_DATABASE_PASSWORD: ${DB_PASSWORD_MYSQLPASSWORD}
+      VIKUNJA_DATABASE_TYPE: postgres
+      VIKUNJA_DATABASE_USER: ${VIKUNJA_USER_SQLUSER_SQLDATABASE}
+      VIKUNJA_DATABASE_DATABASE: ${VIKUNJA_USER_SQLUSER_SQLDATABASE}
+      VIKUNJA_SERVICE_JWTSECRET: ${VIKUNJA_JWTSECRET}
+    ports:
+      - 3456:3456
+    volumes:
+      - ${DOCKER_PATH}/vikunja:/app/vikunja/files
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - nginx_default
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD_MYSQLPASSWORD}
+      POSTGRES_USER: ${VIKUNJA_USER_SQLUSER_SQLDATABASE}
+    volumes:
+      - ${DOCKER_PATH}/postgres/vikunja:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -U $$POSTGRES_USER']
+      interval: 2s
+    networks:
+      - nginx_default
+
+networks:
+  nginx_default:
+    external: true

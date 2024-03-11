@@ -1,0 +1,12 @@
+version: '3.7'
+services:
+  audiobookshelf:
+    restart: always
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    ports:
+      - 13378:80
+    volumes:
+      - ${MEDIA_PATH}/Audiobooks:/audiobooks
+      - ${MEDIA_PATH}/Podcasts:/podcasts
+      - ${DOCKER_PATH}/audiobookshelf/:/config
+      - ${DOCKER_PATH}/audiobookshelf/:/metadata

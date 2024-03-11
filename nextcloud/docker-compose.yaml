@@ -1,0 +1,30 @@
+version: '2'
+
+services:
+  nextcloud:
+    container_name: nextcloud
+    restart: always
+    image: nextcloud
+    ports:
+      - 8080:80
+    volumes:
+      - ${DOCKER_PATH}/nextcloud/config:/var/www/html/config
+      - ${DOCKER_PATH}/nextcloud/appdata:/config
+      - ${DOCKER_PATH}/nextcloud/data:/data
+    depends_on:
+      - db
+    environment:
+      - MYSQL_PASSWORD=${NEXTCLOUD_SQL_ROOTPW}
+      - POSTGRES_HOST=db:5432
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - ${DOCKER_PATH}/postgres/nextcloud/:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${NEXTCLOUD_SQL_ROOTPW}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}

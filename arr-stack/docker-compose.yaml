@@ -1,0 +1,187 @@
+version: '3'
+
+networks:
+  media-network:
+    name: media-network
+    driver: bridge
+    ipam:
+      driver: default
+
+services:
+  gluetun:
+    restart: always
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    # line above must be uncommented to allow external containers to connect.
+    # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/connect-a-container-to-gluetun.md#external-container-to-gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 6881:6881
+      - 6881:6881/udp
+      - 8085:8085 # qbittorrent
+      - 7878:7878 # Radarr
+      - 8989:8989 # Sonarr
+      - 9696:9696 # Prowlarr
+      - 5055:5055 # Jellyseerr
+      - 8096:8096 #jellyfin1
+      - 8787:8787 #readarr
+      - 8920:8920 #optional jellyfin2
+      - 7359:7359/udp #optional jellyfin3
+      - 1900:1900/udp #optional jellyfin4
+
+    volumes:
+      - ${DOCKER_PATH}/arr-stack:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_PORT_FORWARDING=on
+      - OPENVPN_USER=${OPENVPN_USER}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+      - SERVER_COUNTRIES=${OPENVPN_COUNTRY}
+      # Timezone for accurate log times
+      - TZ=CET
+      # Server list updater
+    networks:
+      - media-network
+  ###
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent
+    container_name: qbittorrent
+    network_mode: 'service:gluetun'
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=CET
+      - WEBUI_PORT=8085
+    volumes:
+      - ${DOCKER_PATH}/arr-stack/qbittorrent:/config
+      - ${DOCKER_MEDIA}/Downloads:/downloads
+    depends_on:
+      - gluetun
+    restart: always
+    healthcheck:
+      test: 'curl -sfI -o /dev/null --connect-timeout 10 --retry 3 --retry-delay 10 --retry-all-errors https://www.google.com/robots.txt || kill 1'
+      interval: 1m
+      timeout: 1m
+  ###
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    network_mode: 'service:gluetun'
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=CET
+    volumes:
+      - ${DOCKER_PATH}/arr-stack/sonarr/data:/config
+      - ${DOCKER_MEDIA}/Shows:/shows #optional
+      - ${DOCKER_MEDIA}/Downloads:/downloads #optional
+      - ${DOCKER_MEDIA}/:/media
+    depends_on:
+      - gluetun
+    restart: always
+    healthcheck:
+      test: 'curl -sfI -o /dev/null --connect-timeout 10 --retry 3 --retry-delay 10 --retry-all-errors https://www.google.com/robots.txt || kill 1'
+      interval: 1m
+      timeout: 1m
+  ###
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    network_mode: 'service:gluetun'
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=CET
+    volumes:
+      - ${DOCKER_PATH}/arr-stack/radarr/data:/config
+      - ${DOCKER_MEDIA}/Movies:/movies #optional
+      - ${DOCKER_MEDIA}/Downloads:/downloads #optional
+      - ${DOCKER_MEDIA}/:/media
+    depends_on:
+      - gluetun
+    restart: always
+    healthcheck:
+      test: 'curl -sfI -o /dev/null --connect-timeout 10 --retry 3 --retry-delay 10 --retry-all-errors https://www.google.com/robots.txt || kill 1'
+      interval: 1m
+      timeout: 1m
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    network_mode: 'service:gluetun'
+    depends_on:
+      - gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=CET
+    volumes:
+      - ${DOCKER_PATH}/arr_stack/readarr/:/config
+      - ${DOCKER_MEDIA}/Books/:/books #optional
+      - ${DOCKER_MEDIA}/Audiobooks/:/audiobooks #optional
+      - ${DOCKER_MEDIA}/Downloads:/downloads #optional
+    restart: always
+    healthcheck:
+      test: 'curl -sfI -o /dev/null --connect-timeout 10 --retry 3 --retry-delay 10 --retry-all-errors https://www.google.com/robots.txt || kill 1'
+      interval: 1m
+      timeout: 1m
+  ###
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: 'service:gluetun'
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=CET
+    volumes:
+      - ${DOCKER_PATH}/arr-stack/prowlarr/data:/config
+    depends_on:
+      - gluetun
+    restart: always
+    healthcheck:
+      test: 'curl -sfI -o /dev/null --connect-timeout 10 --retry 3 --retry-delay 10 --retry-all-errors https://www.google.com/robots.txt || kill 1'
+      interval: 1m
+      timeout: 1m
+  ###
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    volumes:
+      - ${DOCKER_PATH}/arr-stack/jellyseerr:/app/config
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=CET
+    network_mode: 'service:gluetun'
+    depends_on:
+      - gluetun
+    restart: always
+    healthcheck:
+      test: 'curl -sfI -o /dev/null --connect-timeout 10 --retry 3 --retry-delay 10 --retry-all-errors https://www.google.com/robots.txt || kill 1'
+      interval: 1m
+      timeout: 1m
+  ###
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    network_mode: 'service:gluetun'
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=CET
+      - JELLYFIN_PublishedServerUrl=192.168.1.5 #optional
+    volumes:
+      - ${DOCKER_PATH}/jellyfin/library:/config
+      - ${DOCKER_MEDIA}/Shows:/data/tvshows
+      - ${DOCKER_MEDIA}/Movies:/data/movies
+      - ${DOCKER_MEDIA}/:/media
+    restart: always
+    depends_on:
+      - gluetun
+    healthcheck:
+      test: 'curl -sfI -o /dev/null --connect-timeout 10 --retry 3 --retry-delay 10 --retry-all-errors https://www.google.com/robots.txt || kill 1'
+      interval: 1m
+      timeout: 1m
