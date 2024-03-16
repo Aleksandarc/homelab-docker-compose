@@ -4,11 +4,18 @@ services:
     image: lscr.io/linuxserver/freshrss:latest
     container_name: freshrss
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=CET
+      - PUID=${ID} #optional
+      - PGID=${ID} #optional
+      - TZ=${TZ}
     volumes:
       - ${DOCKER_PATH}/freshrss/config:/config
     ports:
-      - 9898:80
+      - ${PORT_FRESHRSS_HTTP}:80
     restart: unless-stopped
+    networks:
+      - default
+
+networks:
+  default:
+    name: nginx_default
+    external: true

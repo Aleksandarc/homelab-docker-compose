@@ -6,16 +6,22 @@ services:
     container_name: syncthing
     hostname: syncthing
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=CET
+      - PUID=${ID}
+      - PGID=${ID}
+      - TZ=${TZ}
     volumes:
       - ${DOCKER_PATH}/config:/config
-      - ${BACKUP_PATH}/Syncthing:/data
-      - ${BACKUP_PATH}/SyncthingBackup:/backupdata
+      - ${DOCKER_BACKUP_PATH}/Syncthing:/data
+      - ${DOCKER_BACKUP_PATH}/SyncthingBackup:/backupdata
     ports:
-      - '8384:8384'
+      - ${PORT_SYNCTHING_HTTP}:8384
       - '22000:22000/tcp'
       - '22000:22000/udp'
       - '21027:21027/udp'
     restart: always
+    networks:
+      - default
+networks:
+  default:
+    name: nginx_default
+    external: true

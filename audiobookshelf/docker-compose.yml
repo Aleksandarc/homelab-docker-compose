@@ -4,9 +4,15 @@ services:
     restart: always
     image: ghcr.io/advplyr/audiobookshelf:latest
     ports:
-      - 13378:80
+      - ${PORT_AUDIOBOOKSHELF_HTTP}:80
     volumes:
       - ${MEDIA_PATH}/Audiobooks:/audiobooks
       - ${MEDIA_PATH}/Podcasts:/podcasts
       - ${DOCKER_PATH}/audiobookshelf/:/config
       - ${DOCKER_PATH}/audiobookshelf/:/metadata
+    networks:
+      - default
+networks:
+  default:
+    name: nginx_default
+    external: true

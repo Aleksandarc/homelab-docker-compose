@@ -4,9 +4,9 @@ services:
     image: 'jc21/nginx-proxy-manager:latest'
     restart: always
     ports:
-      - '80:80'
-      - '81:81'
-      - '443:443'
+      - ${PORT_NGINX_HTTP}:80
+      - ${PORT_NGINX_HTTPS}:81
+      - ${PORT_NGINX_PANEL}:443
     volumes:
       - ${DOCKER_PATH}/nginx/data:/data
       - ${DOCKER_PATH}/nginx/letsencrypt:/etc/letsencrypt

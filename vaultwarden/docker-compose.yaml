@@ -5,12 +5,12 @@ services:
     container_name: vaultwarden
     restart: always
     ports:
-      - 9445:80 #map any custom port to use (replace 8445 not 80)
+      - ${PORT_VAULTWARDEN_HTTP}:80 #map any custom port to use (replace 8445 not 80)
     volumes:
       - ${DOCKER_PATH}/vaultwarden:/data:rw
 
 #uncomment below network part if you are NOT using Nginx Proxy Manager, or you can remove the same
 networks:
   default:
-    external:
-      name: nginx_default
+    name: nginx_default
+    external: true

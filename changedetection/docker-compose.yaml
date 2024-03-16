@@ -58,8 +58,9 @@ services:
 
     # Comment out ports: when using behind a reverse proxy , enable networks: etc.
     ports:
-      - 5000:5000
-
+      - ${PORT_CHANGE_HTTP}:5000
+    networks:
+      - default
     # Used for fetching pages via WebDriver+Chrome where you need Javascript support.
     # Now working on arm64 (needs testing on rPi - tested on Oracle ARM instance)
     # replace image with seleniarm/standalone-chromium:4.0.0-20211213
@@ -100,3 +101,7 @@ services:
 #            # Workaround to avoid the browser crashing inside a docker container
 #            # See https://github.com/SeleniumHQ/docker-selenium#quick-start
 #            - /dev/shm:/dev/shm
+networks:
+  default:
+    name: nginx_default
+    external: true

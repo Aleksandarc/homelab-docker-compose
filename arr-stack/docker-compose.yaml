@@ -19,18 +19,18 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     ports:
-      - 6881:6881
-      - 6881:6881/udp
-      - 8085:8085 # qbittorrent
-      - 7878:7878 # Radarr
-      - 8989:8989 # Sonarr
-      - 9696:9696 # Prowlarr
-      - 5055:5055 # Jellyseerr
-      - 8096:8096 #jellyfin1
-      - 8787:8787 #readarr
-      - 8920:8920 #optional jellyfin2
-      - 7359:7359/udp #optional jellyfin3
-      - 1900:1900/udp #optional jellyfin4
+      - ${PORT_GLUETUN_HTTP}:6881
+      - ${PORT_GLUETUN_HTTP}:6881/udp
+      - ${PORT_QBIT_HTTP}:8085 # qbittorrent
+      - ${PORT_RADARR_HTTP}:7878 # Radarr
+      - ${PORT_SONARR_HTTP}:8989 # Sonarr
+      - ${PORT_PROWLARR_HTTP}:9696 # Prowlarr
+      - ${PORT_JELLYSEERR_HTTP}:5055 # Jellyseerr
+      - ${PORT_JELLYFIN1_ACCESS}:8096 #jellyfin1
+      - ${PORT_READARR_HTTP}:8787 #readarr
+      - ${PORT_JELLYFIN2_HTTP}:8920 #optional jellyfin2
+      - ${PORT_JELLYFIN3_HTTP}:7359/udp #optional jellyfin3
+      - ${PORT_JELLYFIN4_HTTP}:1900/udp #optional jellyfin4
 
     volumes:
       - ${DOCKER_PATH}/arr-stack:/gluetun
@@ -41,7 +41,7 @@ services:
       - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
       - SERVER_COUNTRIES=${OPENVPN_COUNTRY}
       # Timezone for accurate log times
-      - TZ=CET
+      - TZ=${TZ}
       # Server list updater
     networks:
       - media-network
@@ -51,9 +51,9 @@ services:
     container_name: qbittorrent
     network_mode: 'service:gluetun'
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=CET
+      - PUID=${ID}
+      - PGID=${ID}
+      - TZ=${TZ}
       - WEBUI_PORT=8085
     volumes:
       - ${DOCKER_PATH}/arr-stack/qbittorrent:/config
@@ -71,9 +71,9 @@ services:
     container_name: sonarr
     network_mode: 'service:gluetun'
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=CET
+      - PUID=${ID}
+      - PGID=${ID}
+      - TZ=${TZ}
     volumes:
       - ${DOCKER_PATH}/arr-stack/sonarr/data:/config
       - ${DOCKER_MEDIA}/Shows:/shows #optional
@@ -92,9 +92,9 @@ services:
     container_name: radarr
     network_mode: 'service:gluetun'
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=CET
+      - PUID=${ID}
+      - PGID=${ID}
+      - TZ=${TZ}
     volumes:
       - ${DOCKER_PATH}/arr-stack/radarr/data:/config
       - ${DOCKER_MEDIA}/Movies:/movies #optional
@@ -114,9 +114,9 @@ services:
     depends_on:
       - gluetun
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=CET
+      - PUID=${ID}
+      - PGID=${ID}
+      - TZ=${TZ}
     volumes:
       - ${DOCKER_PATH}/arr_stack/readarr/:/config
       - ${DOCKER_MEDIA}/Books/:/books #optional
@@ -133,9 +133,9 @@ services:
     container_name: prowlarr
     network_mode: 'service:gluetun'
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=CET
+      - PUID=${ID}
+      - PGID=${ID}
+      - TZ=${TZ}
     volumes:
       - ${DOCKER_PATH}/arr-stack/prowlarr/data:/config
     depends_on:
@@ -152,9 +152,9 @@ services:
     volumes:
       - ${DOCKER_PATH}/arr-stack/jellyseerr:/app/config
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=CET
+      - PUID=${ID}
+      - PGID=${ID}
+      - TZ=${TZ}
     network_mode: 'service:gluetun'
     depends_on:
       - gluetun
@@ -169,14 +169,15 @@ services:
     container_name: jellyfin
     network_mode: 'service:gluetun'
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=CET
-      - JELLYFIN_PublishedServerUrl=192.168.1.5 #optional
+      - PUID=${ID}
+      - PGID=${ID}
+      - TZ=${TZ}
     volumes:
       - ${DOCKER_PATH}/jellyfin/library:/config
       - ${DOCKER_MEDIA}/Shows:/data/tvshows
       - ${DOCKER_MEDIA}/Movies:/data/movies
+      - ${DOCKER_MEDIA}/Anime:/data/anime
+      - ${DOCKER_MEDIA}/Course:/data/course
       - ${DOCKER_MEDIA}/:/media
     restart: always
     depends_on:
